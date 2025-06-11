@@ -1,0 +1,17 @@
+C:\Users\jacol\RiderProjects\Terminarz\Terminarz\bin\Debug\net9.0-windows\Terminarz.exe
+C:\Users\jacol\RiderProjects\Terminarz\Terminarz\bin\Debug\net9.0-windows\Terminarz.deps.json
+C:\Users\jacol\RiderProjects\Terminarz\Terminarz\bin\Debug\net9.0-windows\Terminarz.runtimeconfig.json
+C:\Users\jacol\RiderProjects\Terminarz\Terminarz\bin\Debug\net9.0-windows\Terminarz.dll
+C:\Users\jacol\RiderProjects\Terminarz\Terminarz\bin\Debug\net9.0-windows\Terminarz.pdb
+C:\Users\jacol\RiderProjects\Terminarz\Terminarz\obj\Debug\net9.0-windows\Terminarz.GeneratedMSBuildEditorConfig.editorconfig
+C:\Users\jacol\RiderProjects\Terminarz\Terminarz\obj\Debug\net9.0-windows\Terminarz.AssemblyInfoInputs.cache
+C:\Users\jacol\RiderProjects\Terminarz\Terminarz\obj\Debug\net9.0-windows\Terminarz.AssemblyInfo.cs
+C:\Users\jacol\RiderProjects\Terminarz\Terminarz\obj\Debug\net9.0-windows\Terminarz.csproj.CoreCompileInputs.cache
+C:\Users\jacol\RiderProjects\Terminarz\Terminarz\obj\Debug\net9.0-windows\Terminarz.dll
+C:\Users\jacol\RiderProjects\Terminarz\Terminarz\obj\Debug\net9.0-windows\refint\Terminarz.dll
+C:\Users\jacol\RiderProjects\Terminarz\Terminarz\obj\Debug\net9.0-windows\Terminarz.pdb
+C:\Users\jacol\RiderProjects\Terminarz\Terminarz\obj\Debug\net9.0-windows\Terminarz.genruntimeconfig.cache
+C:\Users\jacol\RiderProjects\Terminarz\Terminarz\obj\Debug\net9.0-windows\ref\Terminarz.dll
+C:\Users\jacol\RiderProjects\Terminarz\Terminarz\obj\Debug\net9.0-windows\Terminarz.Form1.resources
+C:\Users\jacol\RiderProjects\Terminarz\Terminarz\obj\Debug\net9.0-windows\Terminarz.csproj.GenerateResource.cache
+C:\Users\jacol\RiderProjects\Terminarz\Terminarz\obj\Debug\net9.0-windows\Terminarz.NoteTile.resources
