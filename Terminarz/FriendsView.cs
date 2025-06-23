@@ -82,6 +82,8 @@ namespace Terminarz
             _friendSave.Click += async (s, e) => await OnFriendSave();
             _friendRemove.Click += async (s, e) => await OnFriendDelete();
 
+            _flowLayoutPanel.Click += (s, e) => ClearSelection();
+
             _friendFilterInput.TextChanged += (s, e) => OnFilter();
         }
 
@@ -104,6 +106,12 @@ namespace Terminarz
             {
                 _lock.Release();
             }
+        }
+
+        private void ClearSelection()
+        {
+            _friendToModify = new Friend();
+            ClearInput();
         }
 
         private async Task OnFriendPhotoClicked(object sender, EventArgs e, Friend friend)

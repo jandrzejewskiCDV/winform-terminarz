@@ -43,7 +43,7 @@ namespace Terminarz
 
         public static bool IsValidPhoneNumber(string input)
         {
-            return Regex.IsMatch(input, @"^\+?[0-9\s\-()]{7,20}$");
+            return Regex.IsMatch(input, @"^\+?[0-9\s\-()]{7,15}$");
         }
 
         public static bool IsValidEmail(string input)

@@ -119,21 +119,20 @@ namespace Terminarz.REST
             string path = GetPath();
 
             if (!Path.Exists(path))
-                return new JsonArray();
+                return [];
 
             try
             {
                 string data = File.ReadAllText(path);
 
-                JsonArray? obj = JsonSerializer.Deserialize<JsonArray>(data);
-                return obj == null ? new JsonArray() : obj;
+                return JsonSerializer.Deserialize<JsonArray>(data) ?? [];
             }
             catch (Exception ex)
             {
                 Console.WriteLine("Failed reading list of entities: " + ex.Message);
             }
 
-            return new JsonArray();
+            return [];
         }
 
         private string GetPath()
