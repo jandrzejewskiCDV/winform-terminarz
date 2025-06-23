@@ -31,26 +31,30 @@ partial class Form1
     {
         tabControl = new TabControl();
         friendsTab = new TabPage();
+        label14 = new Label();
+        _friendFilterInput = new TextBox();
+        _friendDelete = new Button();
+        _friendSave = new Button();
+        _friendSocialsRemove = new Button();
+        _friendSocialsAdd = new Button();
+        _friendSocialsInput = new TextBox();
         label5 = new Label();
-        _friendsSaveChangesButton = new Button();
-        _filterFriendsInput = new TextBox();
-        _deleteFriendButton = new Button();
-        _addFriendFinalizeButton = new Button();
-        _addFriendRemoveEmailButton = new Button();
-        _addFriendAddEmailButton = new Button();
-        _addFriendRemovePhoneNumberButton = new Button();
-        _addFriendAddPhoneNumberButton = new Button();
-        _addFriendEmailList = new ListBox();
-        _addFriendEmailInput = new TextBox();
+        _friendSocials = new ListBox();
+        _friendEmailsRemove = new Button();
+        _friendEmailsAdd = new Button();
+        _friendEmailInput = new TextBox();
         label4 = new Label();
-        _addFriendPhoneList = new ListBox();
-        _addFriendPhoneNumberInput = new TextBox();
+        _friendEmails = new ListBox();
+        _friendPhoneListRemove = new Button();
+        _friendPhoneListAdd = new Button();
+        _friendPhoneInput = new TextBox();
         label3 = new Label();
-        _addFriendSurnameInput = new TextBox();
+        _friendPhoneList = new ListBox();
+        _friendSurname = new TextBox();
         label2 = new Label();
-        _addFriendNameInput = new TextBox();
+        _friendName = new TextBox();
         label1 = new Label();
-        _friendsGridView = new DataGridView();
+        _friendLayoutPanel = new FlowLayoutPanel();
         _meetingsPage = new TabPage();
         _meetingsReminderInput = new TextBox();
         _meetingsReminderRemoveButton = new Button();
@@ -80,7 +84,6 @@ partial class Form1
         _notesFlowLayout = new FlowLayoutPanel();
         tabControl.SuspendLayout();
         friendsTab.SuspendLayout();
-        ((System.ComponentModel.ISupportInitialize)_friendsGridView).BeginInit();
         _meetingsPage.SuspendLayout();
         _notesPage.SuspendLayout();
         SuspendLayout();
@@ -99,26 +102,30 @@ partial class Form1
         // 
         // friendsTab
         // 
+        friendsTab.Controls.Add(label14);
+        friendsTab.Controls.Add(_friendFilterInput);
+        friendsTab.Controls.Add(_friendDelete);
+        friendsTab.Controls.Add(_friendSave);
+        friendsTab.Controls.Add(_friendSocialsRemove);
+        friendsTab.Controls.Add(_friendSocialsAdd);
+        friendsTab.Controls.Add(_friendSocialsInput);
         friendsTab.Controls.Add(label5);
-        friendsTab.Controls.Add(_friendsSaveChangesButton);
-        friendsTab.Controls.Add(_filterFriendsInput);
-        friendsTab.Controls.Add(_deleteFriendButton);
-        friendsTab.Controls.Add(_addFriendFinalizeButton);
-        friendsTab.Controls.Add(_addFriendRemoveEmailButton);
-        friendsTab.Controls.Add(_addFriendAddEmailButton);
-        friendsTab.Controls.Add(_addFriendRemovePhoneNumberButton);
-        friendsTab.Controls.Add(_addFriendAddPhoneNumberButton);
-        friendsTab.Controls.Add(_addFriendEmailList);
-        friendsTab.Controls.Add(_addFriendEmailInput);
+        friendsTab.Controls.Add(_friendSocials);
+        friendsTab.Controls.Add(_friendEmailsRemove);
+        friendsTab.Controls.Add(_friendEmailsAdd);
+        friendsTab.Controls.Add(_friendEmailInput);
         friendsTab.Controls.Add(label4);
-        friendsTab.Controls.Add(_addFriendPhoneList);
-        friendsTab.Controls.Add(_addFriendPhoneNumberInput);
+        friendsTab.Controls.Add(_friendEmails);
+        friendsTab.Controls.Add(_friendPhoneListRemove);
+        friendsTab.Controls.Add(_friendPhoneListAdd);
+        friendsTab.Controls.Add(_friendPhoneInput);
         friendsTab.Controls.Add(label3);
-        friendsTab.Controls.Add(_addFriendSurnameInput);
+        friendsTab.Controls.Add(_friendPhoneList);
+        friendsTab.Controls.Add(_friendSurname);
         friendsTab.Controls.Add(label2);
-        friendsTab.Controls.Add(_addFriendNameInput);
+        friendsTab.Controls.Add(_friendName);
         friendsTab.Controls.Add(label1);
-        friendsTab.Controls.Add(_friendsGridView);
+        friendsTab.Controls.Add(_friendLayoutPanel);
         friendsTab.Location = new Point(4, 24);
         friendsTab.Name = "friendsTab";
         friendsTab.Padding = new Padding(3);
@@ -127,186 +134,211 @@ partial class Form1
         friendsTab.Text = "Znajomi";
         friendsTab.UseVisualStyleBackColor = true;
         // 
+        // label14
+        // 
+        label14.Anchor = AnchorStyles.Bottom;
+        label14.AutoSize = true;
+        label14.Location = new Point(8, 584);
+        label14.Name = "label14";
+        label14.Size = new Size(56, 15);
+        label14.TabIndex = 23;
+        label14.Text = "Wyszukaj";
+        // 
+        // _friendFilterInput
+        // 
+        _friendFilterInput.Anchor = AnchorStyles.Bottom;
+        _friendFilterInput.Location = new Point(8, 558);
+        _friendFilterInput.Name = "_friendFilterInput";
+        _friendFilterInput.Size = new Size(205, 23);
+        _friendFilterInput.TabIndex = 22;
+        // 
+        // _friendDelete
+        // 
+        _friendDelete.Location = new Point(917, 622);
+        _friendDelete.Name = "_friendDelete";
+        _friendDelete.Size = new Size(75, 23);
+        _friendDelete.TabIndex = 21;
+        _friendDelete.Text = "Usuń";
+        _friendDelete.UseVisualStyleBackColor = true;
+        // 
+        // _friendSave
+        // 
+        _friendSave.Location = new Point(741, 622);
+        _friendSave.Name = "_friendSave";
+        _friendSave.Size = new Size(75, 23);
+        _friendSave.TabIndex = 20;
+        _friendSave.Text = "Zapisz";
+        _friendSave.UseVisualStyleBackColor = true;
+        // 
+        // _friendSocialsRemove
+        // 
+        _friendSocialsRemove.Location = new Point(917, 474);
+        _friendSocialsRemove.Name = "_friendSocialsRemove";
+        _friendSocialsRemove.Size = new Size(75, 23);
+        _friendSocialsRemove.TabIndex = 19;
+        _friendSocialsRemove.Text = "Usuń";
+        _friendSocialsRemove.UseVisualStyleBackColor = true;
+        // 
+        // _friendSocialsAdd
+        // 
+        _friendSocialsAdd.Location = new Point(742, 474);
+        _friendSocialsAdd.Name = "_friendSocialsAdd";
+        _friendSocialsAdd.Size = new Size(75, 23);
+        _friendSocialsAdd.TabIndex = 18;
+        _friendSocialsAdd.Text = "Dodaj";
+        _friendSocialsAdd.UseVisualStyleBackColor = true;
+        // 
+        // _friendSocialsInput
+        // 
+        _friendSocialsInput.Location = new Point(742, 390);
+        _friendSocialsInput.Name = "_friendSocialsInput";
+        _friendSocialsInput.PlaceholderText = "link do facebook";
+        _friendSocialsInput.Size = new Size(250, 23);
+        _friendSocialsInput.TabIndex = 17;
+        // 
         // label5
         // 
         label5.AutoSize = true;
-        label5.Location = new Point(758, 561);
+        label5.Location = new Point(742, 372);
         label5.Name = "label5";
-        label5.Size = new Size(56, 15);
-        label5.TabIndex = 20;
-        label5.Text = "Wyszukaj";
+        label5.Size = new Size(74, 15);
+        label5.TabIndex = 16;
+        label5.Text = "Social Media";
         // 
-        // _friendsSaveChangesButton
+        // _friendSocials
         // 
-        _friendsSaveChangesButton.Anchor = AnchorStyles.Bottom | AnchorStyles.Right;
-        _friendsSaveChangesButton.Location = new Point(259, 608);
-        _friendsSaveChangesButton.Name = "_friendsSaveChangesButton";
-        _friendsSaveChangesButton.Size = new Size(169, 43);
-        _friendsSaveChangesButton.TabIndex = 19;
-        _friendsSaveChangesButton.Text = "Zapisz zmiany";
-        _friendsSaveChangesButton.UseVisualStyleBackColor = true;
-        _friendsSaveChangesButton.Click += _friendsSaveChangesButton_Click;
+        _friendSocials.FormattingEnabled = true;
+        _friendSocials.Location = new Point(742, 419);
+        _friendSocials.Name = "_friendSocials";
+        _friendSocials.Size = new Size(250, 49);
+        _friendSocials.TabIndex = 15;
         // 
-        // _filterFriendsInput
+        // _friendEmailsRemove
         // 
-        _filterFriendsInput.Anchor = AnchorStyles.Bottom | AnchorStyles.Right;
-        _filterFriendsInput.Location = new Point(758, 579);
-        _filterFriendsInput.Name = "_filterFriendsInput";
-        _filterFriendsInput.Size = new Size(229, 23);
-        _filterFriendsInput.TabIndex = 18;
-        _filterFriendsInput.TextChanged += _filterFriendsInput_TextChanged;
+        _friendEmailsRemove.Location = new Point(917, 325);
+        _friendEmailsRemove.Name = "_friendEmailsRemove";
+        _friendEmailsRemove.Size = new Size(75, 23);
+        _friendEmailsRemove.TabIndex = 14;
+        _friendEmailsRemove.Text = "Usuń";
+        _friendEmailsRemove.UseVisualStyleBackColor = true;
         // 
-        // _deleteFriendButton
+        // _friendEmailsAdd
         // 
-        _deleteFriendButton.Anchor = AnchorStyles.Bottom | AnchorStyles.Right;
-        _deleteFriendButton.Location = new Point(259, 559);
-        _deleteFriendButton.Name = "_deleteFriendButton";
-        _deleteFriendButton.Size = new Size(169, 43);
-        _deleteFriendButton.TabIndex = 16;
-        _deleteFriendButton.Text = "Usuń wybranego znajomego";
-        _deleteFriendButton.UseVisualStyleBackColor = true;
-        _deleteFriendButton.Click += _deleteFriendButton_Click;
+        _friendEmailsAdd.Location = new Point(742, 325);
+        _friendEmailsAdd.Name = "_friendEmailsAdd";
+        _friendEmailsAdd.Size = new Size(75, 23);
+        _friendEmailsAdd.TabIndex = 13;
+        _friendEmailsAdd.Text = "Dodaj";
+        _friendEmailsAdd.UseVisualStyleBackColor = true;
         // 
-        // _addFriendFinalizeButton
+        // _friendEmailInput
         // 
-        _addFriendFinalizeButton.Location = new Point(8, 510);
-        _addFriendFinalizeButton.Name = "_addFriendFinalizeButton";
-        _addFriendFinalizeButton.Size = new Size(228, 43);
-        _addFriendFinalizeButton.TabIndex = 15;
-        _addFriendFinalizeButton.Text = "Dodaj znajomego";
-        _addFriendFinalizeButton.UseVisualStyleBackColor = true;
-        _addFriendFinalizeButton.Click += _addFriendFinalizeButton_Click;
-        // 
-        // _addFriendRemoveEmailButton
-        // 
-        _addFriendRemoveEmailButton.Location = new Point(172, 447);
-        _addFriendRemoveEmailButton.Name = "_addFriendRemoveEmailButton";
-        _addFriendRemoveEmailButton.Size = new Size(64, 36);
-        _addFriendRemoveEmailButton.TabIndex = 14;
-        _addFriendRemoveEmailButton.Text = "Usuń";
-        _addFriendRemoveEmailButton.UseVisualStyleBackColor = true;
-        _addFriendRemoveEmailButton.Click += _addFriendRemoveEmailButton_Click;
-        // 
-        // _addFriendAddEmailButton
-        // 
-        _addFriendAddEmailButton.Location = new Point(8, 447);
-        _addFriendAddEmailButton.Name = "_addFriendAddEmailButton";
-        _addFriendAddEmailButton.Size = new Size(66, 36);
-        _addFriendAddEmailButton.TabIndex = 13;
-        _addFriendAddEmailButton.Text = "Dodaj";
-        _addFriendAddEmailButton.UseVisualStyleBackColor = true;
-        _addFriendAddEmailButton.Click += _addFriendAddEmailButton_Click;
-        // 
-        // _addFriendRemovePhoneNumberButton
-        // 
-        _addFriendRemovePhoneNumberButton.Location = new Point(172, 261);
-        _addFriendRemovePhoneNumberButton.Name = "_addFriendRemovePhoneNumberButton";
-        _addFriendRemovePhoneNumberButton.Size = new Size(64, 36);
-        _addFriendRemovePhoneNumberButton.TabIndex = 12;
-        _addFriendRemovePhoneNumberButton.Text = "Usuń";
-        _addFriendRemovePhoneNumberButton.UseVisualStyleBackColor = true;
-        _addFriendRemovePhoneNumberButton.Click += _addFriendRemovePhoneNumberButton_Click;
-        // 
-        // _addFriendAddPhoneNumberButton
-        // 
-        _addFriendAddPhoneNumberButton.Location = new Point(8, 261);
-        _addFriendAddPhoneNumberButton.Name = "_addFriendAddPhoneNumberButton";
-        _addFriendAddPhoneNumberButton.Size = new Size(66, 36);
-        _addFriendAddPhoneNumberButton.TabIndex = 11;
-        _addFriendAddPhoneNumberButton.Text = "Dodaj";
-        _addFriendAddPhoneNumberButton.UseVisualStyleBackColor = true;
-        _addFriendAddPhoneNumberButton.Click += _addFriendAddPhoneNumberButton_Click;
-        // 
-        // _addFriendEmailList
-        // 
-        _addFriendEmailList.FormattingEnabled = true;
-        _addFriendEmailList.Location = new Point(8, 392);
-        _addFriendEmailList.Name = "_addFriendEmailList";
-        _addFriendEmailList.Size = new Size(228, 49);
-        _addFriendEmailList.TabIndex = 10;
-        // 
-        // _addFriendEmailInput
-        // 
-        _addFriendEmailInput.Location = new Point(7, 352);
-        _addFriendEmailInput.Name = "_addFriendEmailInput";
-        _addFriendEmailInput.Size = new Size(229, 23);
-        _addFriendEmailInput.TabIndex = 9;
+        _friendEmailInput.Location = new Point(742, 241);
+        _friendEmailInput.Name = "_friendEmailInput";
+        _friendEmailInput.PlaceholderText = "xyz@edu.cdv.pl";
+        _friendEmailInput.Size = new Size(250, 23);
+        _friendEmailInput.TabIndex = 12;
         // 
         // label4
         // 
-        label4.Location = new Point(7, 331);
+        label4.AutoSize = true;
+        label4.Location = new Point(742, 223);
         label4.Name = "label4";
-        label4.Size = new Size(229, 18);
-        label4.TabIndex = 8;
-        label4.Text = "Podaj email ";
+        label4.Size = new Size(42, 15);
+        label4.TabIndex = 11;
+        label4.Text = "Emaile";
         // 
-        // _addFriendPhoneList
+        // _friendEmails
         // 
-        _addFriendPhoneList.FormattingEnabled = true;
-        _addFriendPhoneList.Location = new Point(8, 206);
-        _addFriendPhoneList.Name = "_addFriendPhoneList";
-        _addFriendPhoneList.Size = new Size(228, 49);
-        _addFriendPhoneList.TabIndex = 7;
+        _friendEmails.FormattingEnabled = true;
+        _friendEmails.Location = new Point(742, 270);
+        _friendEmails.Name = "_friendEmails";
+        _friendEmails.Size = new Size(250, 49);
+        _friendEmails.TabIndex = 10;
         // 
-        // _addFriendPhoneNumberInput
+        // _friendPhoneListRemove
         // 
-        _addFriendPhoneNumberInput.Location = new Point(7, 166);
-        _addFriendPhoneNumberInput.Name = "_addFriendPhoneNumberInput";
-        _addFriendPhoneNumberInput.Size = new Size(229, 23);
-        _addFriendPhoneNumberInput.TabIndex = 6;
+        _friendPhoneListRemove.Location = new Point(917, 172);
+        _friendPhoneListRemove.Name = "_friendPhoneListRemove";
+        _friendPhoneListRemove.Size = new Size(75, 23);
+        _friendPhoneListRemove.TabIndex = 9;
+        _friendPhoneListRemove.Text = "Usuń";
+        _friendPhoneListRemove.UseVisualStyleBackColor = true;
+        // 
+        // _friendPhoneListAdd
+        // 
+        _friendPhoneListAdd.Location = new Point(742, 172);
+        _friendPhoneListAdd.Name = "_friendPhoneListAdd";
+        _friendPhoneListAdd.Size = new Size(75, 23);
+        _friendPhoneListAdd.TabIndex = 8;
+        _friendPhoneListAdd.Text = "Dodaj";
+        _friendPhoneListAdd.UseVisualStyleBackColor = true;
+        // 
+        // _friendPhoneInput
+        // 
+        _friendPhoneInput.Location = new Point(742, 88);
+        _friendPhoneInput.Name = "_friendPhoneInput";
+        _friendPhoneInput.PlaceholderText = "+48 123 345 567";
+        _friendPhoneInput.Size = new Size(250, 23);
+        _friendPhoneInput.TabIndex = 7;
         // 
         // label3
         // 
-        label3.Location = new Point(7, 145);
+        label3.AutoSize = true;
+        label3.Location = new Point(742, 70);
         label3.Name = "label3";
-        label3.Size = new Size(229, 18);
-        label3.TabIndex = 5;
-        label3.Text = "Podaj numer telefonu:";
+        label3.Size = new Size(106, 15);
+        label3.TabIndex = 6;
+        label3.Text = "Numery telefonów";
         // 
-        // _addFriendSurnameInput
+        // _friendPhoneList
         // 
-        _addFriendSurnameInput.Location = new Point(7, 104);
-        _addFriendSurnameInput.Name = "_addFriendSurnameInput";
-        _addFriendSurnameInput.Size = new Size(229, 23);
-        _addFriendSurnameInput.TabIndex = 4;
+        _friendPhoneList.FormattingEnabled = true;
+        _friendPhoneList.Location = new Point(742, 117);
+        _friendPhoneList.Name = "_friendPhoneList";
+        _friendPhoneList.Size = new Size(250, 49);
+        _friendPhoneList.TabIndex = 5;
+        // 
+        // _friendSurname
+        // 
+        _friendSurname.Location = new Point(892, 24);
+        _friendSurname.Name = "_friendSurname";
+        _friendSurname.Size = new Size(100, 23);
+        _friendSurname.TabIndex = 4;
         // 
         // label2
         // 
-        label2.Location = new Point(7, 83);
+        label2.AutoSize = true;
+        label2.Location = new Point(892, 6);
         label2.Name = "label2";
-        label2.Size = new Size(229, 18);
+        label2.Size = new Size(57, 15);
         label2.TabIndex = 3;
-        label2.Text = "Nazwisko:";
+        label2.Text = "Nazwisko";
         // 
-        // _addFriendNameInput
+        // _friendName
         // 
-        _addFriendNameInput.Location = new Point(7, 45);
-        _addFriendNameInput.Name = "_addFriendNameInput";
-        _addFriendNameInput.Size = new Size(229, 23);
-        _addFriendNameInput.TabIndex = 2;
+        _friendName.Location = new Point(742, 24);
+        _friendName.Name = "_friendName";
+        _friendName.Size = new Size(100, 23);
+        _friendName.TabIndex = 2;
         // 
         // label1
         // 
-        label1.Location = new Point(7, 24);
+        label1.AutoSize = true;
+        label1.Location = new Point(742, 6);
         label1.Name = "label1";
-        label1.Size = new Size(229, 18);
+        label1.Size = new Size(30, 15);
         label1.TabIndex = 1;
-        label1.Text = "Imię:";
+        label1.Text = "Imię";
         // 
-        // _friendsGridView
+        // _friendLayoutPanel
         // 
-        _friendsGridView.AllowUserToAddRows = false;
-        _friendsGridView.AllowUserToDeleteRows = false;
-        _friendsGridView.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
-        _friendsGridView.ColumnHeadersHeightSizeMode = DataGridViewColumnHeadersHeightSizeMode.AutoSize;
-        _friendsGridView.Location = new Point(259, 14);
-        _friendsGridView.MultiSelect = false;
-        _friendsGridView.Name = "_friendsGridView";
-        _friendsGridView.Size = new Size(728, 539);
-        _friendsGridView.TabIndex = 0;
-        _friendsGridView.Text = "dataGridView1";
-        _friendsGridView.CellClick += _friendsGridView_CellClick;
-        _friendsGridView.CellValidating += _friendsGridView_CellValidating;
+        _friendLayoutPanel.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left;
+        _friendLayoutPanel.BackColor = Color.Wheat;
+        _friendLayoutPanel.Location = new Point(8, 6);
+        _friendLayoutPanel.Name = "_friendLayoutPanel";
+        _friendLayoutPanel.Size = new Size(728, 546);
+        _friendLayoutPanel.TabIndex = 0;
         // 
         // _meetingsPage
         // 
@@ -355,7 +387,6 @@ partial class Form1
         _meetingsReminderRemoveButton.TabIndex = 18;
         _meetingsReminderRemoveButton.Text = "Usuń";
         _meetingsReminderRemoveButton.UseVisualStyleBackColor = true;
-        _meetingsReminderRemoveButton.Click += _meetingsReminderRemoveButton_Click;
         // 
         // _meetingsReminderAddButton
         // 
@@ -365,7 +396,6 @@ partial class Form1
         _meetingsReminderAddButton.TabIndex = 17;
         _meetingsReminderAddButton.Text = "Dodaj";
         _meetingsReminderAddButton.UseVisualStyleBackColor = true;
-        _meetingsReminderAddButton.Click += _meetingsReminderAddButton_Click;
         // 
         // label12
         // 
@@ -402,7 +432,6 @@ partial class Form1
         _searchMeetingInput.Name = "_searchMeetingInput";
         _searchMeetingInput.Size = new Size(250, 23);
         _searchMeetingInput.TabIndex = 13;
-        _searchMeetingInput.TextChanged += _searchMeetingInput_TextChanged;
         // 
         // _meetingsDeleteMeetingButton
         // 
@@ -412,7 +441,6 @@ partial class Form1
         _meetingsDeleteMeetingButton.TabIndex = 12;
         _meetingsDeleteMeetingButton.Text = "Usuń spotkanie";
         _meetingsDeleteMeetingButton.UseVisualStyleBackColor = true;
-        _meetingsDeleteMeetingButton.Click += _meetingsDeleteMeetingButton_Click;
         // 
         // _meetingsSaveMeetingButton
         // 
@@ -422,7 +450,6 @@ partial class Form1
         _meetingsSaveMeetingButton.TabIndex = 11;
         _meetingsSaveMeetingButton.Text = "Zapisz spotkanie";
         _meetingsSaveMeetingButton.UseVisualStyleBackColor = true;
-        _meetingsSaveMeetingButton.Click += _meetingsSaveMeetingButton_Click;
         // 
         // _meetingsEndDateTimePicker
         // 
@@ -470,7 +497,6 @@ partial class Form1
         _meetingsIsAllDayCheckBox.Size = new Size(15, 14);
         _meetingsIsAllDayCheckBox.TabIndex = 6;
         _meetingsIsAllDayCheckBox.UseVisualStyleBackColor = true;
-        _meetingsIsAllDayCheckBox.CheckedChanged += _meetingsIsAllDayCheckBox_CheckedChanged;
         // 
         // label8
         // 
@@ -530,7 +556,6 @@ partial class Form1
         _meetingsListView.TabIndex = 0;
         _meetingsListView.UseCompatibleStateImageBehavior = false;
         _meetingsListView.View = View.Details;
-        _meetingsListView.SelectedIndexChanged += _meetingsListView_SelectedIndexChanged;
         // 
         // _notesPage
         // 
@@ -574,7 +599,6 @@ partial class Form1
         _notesFilterInput.Size = new Size(187, 25);
         _notesFilterInput.TabIndex = 2;
         _notesFilterInput.Text = "";
-        _notesFilterInput.TextChanged += _notesFilterInput_TextChanged;
         // 
         // _addNoteButton
         // 
@@ -584,7 +608,6 @@ partial class Form1
         _addNoteButton.TabIndex = 1;
         _addNoteButton.Text = "Dodaj pustą notatkę";
         _addNoteButton.UseVisualStyleBackColor = true;
-        _addNoteButton.Click += _addNoteButton_Click;
         // 
         // _notesFlowLayout
         // 
@@ -609,7 +632,6 @@ partial class Form1
         tabControl.ResumeLayout(false);
         friendsTab.ResumeLayout(false);
         friendsTab.PerformLayout();
-        ((System.ComponentModel.ISupportInitialize)_friendsGridView).EndInit();
         _meetingsPage.ResumeLayout(false);
         _meetingsPage.PerformLayout();
         _notesPage.ResumeLayout(false);
@@ -617,33 +639,11 @@ partial class Form1
         ResumeLayout(false);
     }
 
-    private System.Windows.Forms.Label label1;
-    private System.Windows.Forms.TextBox _addFriendNameInput;
-    private System.Windows.Forms.TextBox _addFriendSurnameInput;
-    private System.Windows.Forms.Label label2;
-
     private System.Windows.Forms.TabControl tabControl;
     private System.Windows.Forms.TabPage friendsTab;
     private System.Windows.Forms.TabPage meetingsTab;
 
     #endregion
-
-    private ListBox _addFriendEmailList;
-    private TextBox _addFriendEmailInput;
-    private Label label4;
-    private ListBox _addFriendPhoneList;
-    private TextBox _addFriendPhoneNumberInput;
-    private Label label3;
-    private Button _addFriendRemovePhoneNumberButton;
-    private Button _addFriendAddPhoneNumberButton;
-    private Button _addFriendRemoveEmailButton;
-    private Button _addFriendAddEmailButton;
-    private Button _addFriendFinalizeButton;
-    private DataGridView _friendsGridView;
-    private Button _deleteFriendButton;
-    private TextBox _filterFriendsInput;
-    private Button _friendsSaveChangesButton;
-    private Label label5;
     private TabPage _meetingsPage;
     private ListView _meetingsListView;
     private TextBox _meetingsTitleInput;
@@ -671,4 +671,28 @@ partial class Form1
     private RichTextBox _notesFilterInput;
     private Label label13;
     private CheckBox _notesFilterRegex;
+    private FlowLayoutPanel _friendLayoutPanel;
+    private Label label1;
+    private TextBox _friendName;
+    private TextBox _friendSurname;
+    private Label label2;
+    private TextBox _friendPhoneInput;
+    private Label label3;
+    private ListBox _friendPhoneList;
+    private Button _friendPhoneListRemove;
+    private Button _friendPhoneListAdd;
+    private Button _friendEmailsRemove;
+    private Button _friendEmailsAdd;
+    private TextBox _friendEmailInput;
+    private Label label4;
+    private ListBox _friendEmails;
+    private Button _friendSocialsRemove;
+    private Button _friendSocialsAdd;
+    private TextBox _friendSocialsInput;
+    private Label label5;
+    private ListBox _friendSocials;
+    private Button _friendDelete;
+    private Button _friendSave;
+    private Label label14;
+    private TextBox _friendFilterInput;
 }

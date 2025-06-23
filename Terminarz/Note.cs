@@ -1,11 +1,11 @@
 ﻿namespace Terminarz
 {
-    internal class Note
+    internal class Note : IIdentifiable<Guid>
     {
-        public Guid Id { get; } = Guid.NewGuid();
+        public Guid Identifier { get; init; } = Guid.NewGuid();
         public string Title { get; set; }
         public string Description { get; set; }
-        public DateTime Created { get; set; } = DateTime.Now;
+        public DateTime Created { get; init; } = DateTime.Now;
         public DateTime? Updated { get; set; }
     }
 }

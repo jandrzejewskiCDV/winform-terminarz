@@ -1,10 +1,36 @@
-﻿using System.Text;
+﻿using System.Net;
+using System.Text;
 using System.Text.RegularExpressions;
 
 namespace Terminarz
 {
-    internal class Utils
+    internal static class Utils
     {
+        public static DateTime TruncateToMinute(this DateTime dt) => new DateTime(dt.Year, dt.Month, dt.Day, dt.Hour, dt.Minute, 0);
+
+        public static T Parse<T>(string value)
+        {
+            if (typeof(T) == typeof(Guid))
+                return (T) (object) Guid.Parse(value);
+
+            return (T) Convert.ChangeType(value, typeof(T));
+        }
+
+        public static async Task<List<T>?> GetObjectsAsync<T>(string endpointSuffix)
+        {
+            try
+            {
+                (HttpStatusCode code, List<T>? list) = await WebUtils.Get<List<T>>(endpointSuffix);
+
+                return code == HttpStatusCode.OK ? list : null;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"failed getting objects async from endpoint: {endpointSuffix}");
+                return null;
+            }
+        }
+
         public static string TrimInput(string input)
         {
             return input == null ? string.Empty : input.Trim();

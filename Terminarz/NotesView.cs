@@ -4,46 +4,113 @@ namespace Terminarz
 {
     internal class NotesView
     {
-        private readonly INoteRepository _noteRepository;
-        private readonly FlowLayoutPanel _layoutPanel;
+        private readonly SemaphoreSlim _lock = new SemaphoreSlim(1, 1);
+        private readonly Dictionary<Guid, Note> _cache = new();
 
-        public NotesView(INoteRepository noteRepository, FlowLayoutPanel layoutPanel)
+        private readonly FlowLayoutPanel _layoutPanel;
+        private readonly Button _addNoteButton;
+        private readonly RichTextBox _filterNotesInput;
+        private readonly CheckBox _regexFilter;
+
+        private string? _filter;
+
+        public NotesView(FlowLayoutPanel layoutPanel,
+            Button addNoteButton, RichTextBox filterNotesInput,
+            CheckBox regexFilter)
         {
-            _noteRepository = noteRepository;
             _layoutPanel = layoutPanel;
+            _addNoteButton = addNoteButton;
+            _filterNotesInput = filterNotesInput;
+            _regexFilter = regexFilter;
         }
 
         public void Load()
         {
             _layoutPanel.Controls.Clear();
 
-            foreach (Note note in _noteRepository.FindAll())
-                CreateNoteTile(note);
+            _addNoteButton.Click += async (s, e) => await OnAddNote();
+            _filterNotesInput.TextChanged += (s, e) => OnFilterApplied();
+
+            _ = LoadNotes();
         }
 
-        public void OnFilterApplied(string filter, bool isRegex)
+        private void OnFilterApplied()
         {
-            UpdateView(isRegex ? SearchByRegex(filter) : SearchByText(filter));
+            _filter = _filterNotesInput.Text;
+            UpdateView();
         }
 
-        public void OnAddNote()
+        private async Task LoadNotes()
         {
-            Note note = new Note();
-            note.Title = "Nowy tytuł";
-            note.Description = "Nowy opis";
+            await _lock.WaitAsync();
+            try
+            {
+                List<Note>? notes = await Utils.GetObjectsAsync<Note>("notes");
 
-            _noteRepository.Save(note);
-
-            CreateNoteTile(note);
+                if (notes != null)
+                    _layoutPanel.Invoke(() =>
+                    {
+                        foreach (Note note in notes)
+                        {
+                            _cache[note.Identifier] = note;
+                            CreateNoteTile(note);
+                        }
+                    });
+            }
+            finally
+            {
+                _lock.Release();
+            }
         }
 
-        private void OnRemoveNote(NoteTile tile)
+        private async Task OnAddNote()
         {
-            _noteRepository.Delete(tile.Note.Id);
-            _layoutPanel.Controls.Remove(tile);
+            Note note = new()
+            {
+                Title = "Nowy tytuł",
+                Description = "Nowy opis"
+            };
+
+            await _lock.WaitAsync();
+            try
+            {
+                await WebUtils.Post("notes", note);
+                _layoutPanel.Invoke(() =>
+                {
+                    if (!_cache.ContainsKey(note.Identifier))
+                        _cache[note.Identifier] = note;
+
+                    CreateNoteTile(note);
+                    UpdateView();
+                });
+            }
+            finally
+            {
+                _lock.Release();
+            }
         }
 
-        private void OnNoteUpdated(NoteTile noteTile)
+        private async Task OnRemoveNote(NoteTile tile)
+        {
+            Note note = tile.Note;
+
+            await _lock.WaitAsync();
+            try
+            {
+                await WebUtils.Delete("notes/delete/" + note.Identifier);
+                _layoutPanel.Invoke(() =>
+                {
+                    _layoutPanel.Controls.Remove(tile);
+                    UpdateView();
+                });
+            }
+            finally
+            {
+                _lock.Release();
+            }
+        }
+
+        private async Task OnNoteUpdated(NoteTile noteTile)
         {
             Note note = noteTile.Note;
 
@@ -53,66 +120,69 @@ namespace Terminarz
             note.Title = noteTile.Title;
             note.Description = noteTile.Description;
             note.Updated = DateTime.Now;
-            _noteRepository.Save(note);
 
-            noteTile.UpdateModifiedAt();
+            await _lock.WaitAsync();
+            try
+            {
+                await WebUtils.Post("notes", note);
+                _layoutPanel.Invoke(noteTile.UpdateModifiedAt);
+            }
+            finally
+            {
+                _lock.Release();
+            }
         }
 
         private void CreateNoteTile(Note note)
         {
             NoteTile tile = new NoteTile(note);
-            tile.Deleted += (s, args) => OnRemoveNote(tile);
-            tile.Save += (s, args) => OnNoteUpdated(tile);
+            tile.Deleted += async (s, args) => await OnRemoveNote(tile);
+            tile.Save += async (s, args) => await OnNoteUpdated(tile);
             _layoutPanel.Controls.Add(tile);
         }
 
-        public List<Note> SearchByText(string filter)
+        public List<Note> SearchByText()
         {
-            if (string.IsNullOrWhiteSpace(filter))
-                return _noteRepository.FindAll();
+            if (string.IsNullOrWhiteSpace(_filter))
+                return [.. _cache.Values];
 
-            List<Note> results = _noteRepository.FindAll(n => 
-             n.Title.Contains(filter, StringComparison.OrdinalIgnoreCase) ||
-             n.Description.Contains(filter, StringComparison.OrdinalIgnoreCase)
-             );
-
-            return results;
+            return [.. _cache.Values.Where(n =>
+             n.Title.Contains(_filter, StringComparison.OrdinalIgnoreCase) ||
+             n.Description.Contains(_filter, StringComparison.OrdinalIgnoreCase)
+             )];
         }
 
-        public List<Note> SearchByRegex(string pattern)
+        public List<Note> SearchByRegex()
         {
-            if (string.IsNullOrWhiteSpace(pattern))
-                return _noteRepository.FindAll();
+            if (string.IsNullOrWhiteSpace(_filter))
+                return [.. _cache.Values];
 
             Regex regex;
             try
             {
-                regex = new Regex(pattern, RegexOptions.IgnoreCase);
+                regex = new Regex(_filter, RegexOptions.IgnoreCase);
             }
             catch (ArgumentException)
             {
-                return _noteRepository.FindAll();
+                return [.. _cache.Values];
             }
 
-            List<Note> results = _noteRepository.FindAll(n =>
+            return [.. _cache.Values.Where(n =>
                 regex.IsMatch(n.Title ?? "") || regex.IsMatch(n.Description ?? "")
-            );
+            )];
+        }
 
-            return results;
+        private void UpdateView()
+        {
+            UpdateView(_regexFilter.Checked ? SearchByRegex() : SearchByText());
         }
 
         private void UpdateView(List<Note> notesToShow)
         {
-            HashSet<Guid> noteIds = notesToShow.Select(n => n.Id).ToHashSet();
+            HashSet<Guid> noteIds = [.. notesToShow.Select(n => n.Identifier)];
 
             foreach (NoteTile tile in _layoutPanel.Controls.OfType<NoteTile>())
-                tile.Visible = noteIds.Contains(tile.Note.Id);
-        }
-
-        private void ShowAllNotes()
-        {
-            foreach (NoteTile tile in _layoutPanel.Controls.OfType<NoteTile>())
-                tile.Visible = true;
+                tile.Visible = noteIds.Contains(tile.Note.Identifier);
         }
     }
 }

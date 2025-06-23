@@ -51,7 +51,8 @@
                 Font = new Font("Segoe UI", 10, FontStyle.Bold),
                 Dock = DockStyle.Bottom,
                 Height = 30,
-                BorderStyle = BorderStyle.FixedSingle
+                BorderStyle = BorderStyle.FixedSingle,
+                ReadOnly = true
             };
 
             _modifiedAt = new TextBox()
@@ -60,7 +61,8 @@
                 Font = new Font("Segoe UI", 10, FontStyle.Bold),
                 Dock = DockStyle.Bottom,
                 Height = 30,
-                BorderStyle = BorderStyle.FixedSingle
+                BorderStyle = BorderStyle.FixedSingle,
+                ReadOnly = true
             };
 
             _deleteButton = new Button()

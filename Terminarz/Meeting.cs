@@ -1,8 +1,8 @@
 ﻿namespace Terminarz
 {
-    internal class Meeting
+    internal class Meeting : IIdentifiable<Guid>
     {
-        public readonly Guid Id;
+        public Guid Identifier { get; init; } = Guid.NewGuid();
         public string Title { get; set; }
         public string Description { get; set; }
         public DateTime Start { get; set; }
@@ -10,11 +10,6 @@
         public bool IsAllDay => End == null;
 
         public List<string> Reminders = new();
-
-        public Meeting()
-        {
-            Id = Guid.NewGuid();
-        }
 
         public override string ToString()
         {

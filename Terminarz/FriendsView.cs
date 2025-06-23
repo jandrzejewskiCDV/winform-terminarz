@@ -1,205 +1,303 @@
-﻿using System.ComponentModel;
+﻿using System.Net;
 
 namespace Terminarz
 {
     internal class FriendsView
     {
-        private readonly IFriendsRepository _friendsRepository;
-        private readonly DataGridView _friendsDataGridView;
-        private readonly BindingSource _bindingSource;
+        private readonly SemaphoreSlim _lock = new(1, 1);
 
-        private string _filter;
-        private Friend? _selectedFriend;
+        private readonly Dictionary<Guid, Friend> _cache = new();
 
-        public FriendsView(IFriendsRepository friendsRepository, DataGridView friendsDataGridView)
+        private readonly FlowLayoutPanel _flowLayoutPanel;
+
+        private readonly TextBox _friendNameInput;
+        private readonly TextBox _friendSurnameInput;
+        private readonly TextBox _friendPhoneInput;
+        private readonly TextBox _friendEmailInput;
+        private readonly TextBox _friendSocialInput;
+        private readonly TextBox _friendFilterInput;
+
+        private readonly ListBox _friendPhoneList;
+        private readonly ListBox _friendEmailList;
+        private readonly ListBox _friendSocialsList;
+
+        private readonly Button _friendPhoneAdd;
+        private readonly Button _friendPhoneRemove;
+        private readonly Button _friendEmailAdd;
+        private readonly Button _friendEmailRemove;
+        private readonly Button _friendSocialsAdd;
+        private readonly Button _friendSocialsRemove;
+        private readonly Button _friendSave;
+        private readonly Button _friendRemove;
+
+        private Friend _friendToModify = new Friend();
+        private string? _filter = null;
+
+        public FriendsView(FlowLayoutPanel flowLayoutPanel,
+            TextBox friendNameInput, 
+            TextBox friendSurnameInput,
+            TextBox friendPhoneInput,
+            TextBox friendEmailInput,
+            TextBox friendSocialInput,
+            TextBox friendFilterInput,
+            ListBox friendPhoneList, 
+            ListBox friendEmailList, 
+            ListBox friendSocialsList,
+            Button friendPhoneAdd,
+            Button friendPhoneRemove,
+            Button friendEmailAdd,
+            Button friendEmailRemove, 
+            Button friendSocialsAdd, 
+            Button friendSocialsRemove, 
+            Button friendSave,
+            Button friendRemove)
         {
-            _friendsRepository = friendsRepository;
-            _friendsDataGridView = friendsDataGridView;
-            _bindingSource = new BindingSource();
+            _flowLayoutPanel = flowLayoutPanel;
+            _friendNameInput = friendNameInput;
+            _friendSurnameInput = friendSurnameInput;
+            _friendPhoneInput = friendPhoneInput;
+            _friendEmailInput = friendEmailInput;
+            _friendSocialInput = friendSocialInput;
+            _friendFilterInput = friendFilterInput;
+            _friendPhoneList = friendPhoneList;
+            _friendEmailList = friendEmailList;
+            _friendSocialsList = friendSocialsList;
+            _friendPhoneAdd = friendPhoneAdd;
+            _friendPhoneRemove = friendPhoneRemove;
+            _friendEmailAdd = friendEmailAdd;
+            _friendEmailRemove = friendEmailRemove;
+            _friendSocialsAdd = friendSocialsAdd;
+            _friendSocialsRemove = friendSocialsRemove;
+            _friendSave = friendSave;
+            _friendRemove = friendRemove;
+
+            _friendPhoneAdd.Click += (s, e) => { Utils.AddTextToListBox(_friendPhoneList, _friendPhoneInput.Text, Utils.IsValidPhoneNumber, "Numer telefonu jest nieprawidłowy"); };
+            _friendEmailAdd.Click += (s, e) => { Utils.AddTextToListBox(_friendEmailList, _friendEmailInput.Text, Utils.IsValidEmail, "Email jest nieprawidłowy"); };
+            _friendSocialsAdd.Click += (s, e) => { Utils.AddTextToListBox(_friendSocialsList, _friendSocialInput.Text, Utils.NotEmptyAndAllLetters, "Sociale nie moga byc puste"); };
+
+            _friendPhoneRemove.Click += (s, e) => { Utils.RemoveSelectedTextFromListBox(_friendPhoneList); };
+            _friendEmailRemove.Click += (s, e) => { Utils.RemoveSelectedTextFromListBox(_friendEmailList); };
+            _friendSocialsRemove.Click += (s, e) => { Utils.RemoveSelectedTextFromListBox(_friendSocialsList); };
+
+            _friendSave.Click += async (s, e) => await OnFriendSave();
+            _friendRemove.Click += async (s, e) => await OnFriendDelete();
+
+            _friendFilterInput.TextChanged += (s, e) => OnFilter();
         }
 
-        public void Load()
+        public async void Load()
         {
-            _bindingSource.DataSource = _friendsRepository.GetBindingList();
-            _friendsDataGridView.DataSource = _bindingSource;
+            await _lock.WaitAsync();
+            try
+            {
+                List<Friend>? friends = await Utils.GetObjectsAsync<Friend>("friends");
+                if(friends != null)
+                    _flowLayoutPanel.Invoke(() =>
+                    {
+                        foreach (Friend friend in friends)
+                            _cache[friend.Identifier] = friend;
+
+                        Render();
+                    });
+            }
+            finally
+            {
+                _lock.Release();
+            }
         }
 
-        public void OnCellClick(DataGridViewCellEventArgs e)
+        private async Task OnFriendPhotoClicked(object sender, EventArgs e, Friend friend)
         {
-            if (e.RowIndex < 0)
+            if (e is not MouseEventArgs mouseEventArgs)
                 return;
 
-            if (e.RowIndex >= _friendsDataGridView.Rows.Count)
-                return;
-
-            var row = _friendsDataGridView.Rows[e.RowIndex];
-            var friend = row.DataBoundItem as Friend;
-
-            if (friend == null)
-                return;
-
-            _selectedFriend = friend;
+            if (mouseEventArgs.Button == MouseButtons.Left)
+                await OnFriendPhotoUpdate(friend);
+            else if(mouseEventArgs.Button == MouseButtons.Right)
+                await OnFriendPhotoDelete(friend);
         }
 
-        public void OnAddPhoneNumber(ListBox listBox, string phoneNumber)
+        private async Task OnFriendPhotoUpdate(Friend friend)
         {
-            Utils.AddTextToListBox(listBox, phoneNumber, Utils.IsValidPhoneNumber, "Nieprawidłowy numer telefonu");
+            using (OpenFileDialog ofd = new OpenFileDialog())
+            {
+                ofd.Title = "Wybierz zdjęcie";
+                ofd.Filter = "Pliki graficzne|*.jpg;*.jpeg;*.png;*.bmp";
+
+                if (ofd.ShowDialog() == DialogResult.OK)
+                {
+                    try
+                    {
+                        friend.PhotoPath = ofd.FileName;
+                    }
+                    catch (Exception ex)
+                    {
+                        MessageBox.Show("Nie udało się załadować obrazu: " + ex.Message);
+                    }
+                }
+            }
+
+            await SaveFriend(friend);
         }
 
-        public void OnRemovePhoneNumber(ListBox listBox)
+        private async Task OnFriendPhotoDelete(Friend friend)
         {
-            Utils.RemoveSelectedTextFromListBox(listBox);
+            friend.PhotoPath = null;
+            await SaveFriend(friend);
         }
 
-        public void OnAddEmail(ListBox listBox, string email)
+        private async Task OnFriendSave()
         {
-            Utils.AddTextToListBox(listBox, email, Utils.IsValidEmail, "Nieprawidłowy email");
-        }
+            Friend friend = _friendToModify;
 
-        public void OnRemoveEmail(ListBox listBox)
-        {
-            Utils.RemoveSelectedTextFromListBox(listBox);
-        }
-
-        public void OnDeleteFriend()
-        {
-            if (_selectedFriend == null)
-                return;
-
-            _friendsRepository.Delete(_selectedFriend.Id);
-
-            FilterFriends();
-        }
-
-        public void OnSaveChanges()
-        {
-            _friendsRepository.SaveAll();
-
-            MessageBox.Show("Zapisano zmiany!", "Sukces", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-        }
-
-        public bool AddFriend(string name, string surname, ListBox emailList, ListBox phoneNumberList)
-        {
-            name = Utils.TrimInput(name);
-            surname = Utils.TrimInput(surname);
-
+            string name = Utils.TrimInput(_friendNameInput.Text);
+            Console.WriteLine(_friendNameInput.Text);
             if (!Utils.NotEmptyAndAllLetters(name))
             {
-                MessageBox.Show("Imię może zawierać tylko litery i nie może być puste.", "Błąd walidacji", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                return false;
+                MessageBox.Show("Imie nie moze byc puste oraz musi skladac sie z liter!", "Błąd walidacji", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
             }
 
-            if (!Utils.NotEmptyAndAllLetters(surname))
+            string surname = Utils.TrimInput(_friendSurnameInput.Text);
+            if (!Utils.NotEmptyAndAllLetters(name))
             {
-                MessageBox.Show("Nazwisko może zawierać tylko litery i nie może być puste.", "Błąd walidacji", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                return false;
+                MessageBox.Show("Nazwisko nie moze byc puste oraz musi skladac sie z liter!", "Błąd walidacji", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
             }
 
-            string emails = Utils.JoinStringsFromListBox(emailList);
-            string phoneNumbers = Utils.JoinStringsFromListBox(phoneNumberList);
+            List<string> emails = _friendEmailList.Items.Cast<string>().ToList();
+            List<string> phoneNumbers = _friendPhoneList.Items.Cast<string>().ToList();
+            List<string> socials = _friendSocialsList.Items.Cast<string>().ToList();
 
-            Friend friend = new Friend
-            {
-                Id = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds(),
-                Name = name,
-                Surname = surname,
-                Emails = emails,
-                PhoneNumbers = phoneNumbers
-            };
+            friend.Name = name;
+            friend.Surname = surname;
+            friend.Emails.Clear();
+            friend.PhoneNumbers.Clear();
+            friend.SocialMedia.Clear();
 
-            if (_friendsRepository.FindAll(x => x.Equals(friend)).Count != 0)
+            friend.Emails.AddRange(emails);
+            friend.PhoneNumbers.AddRange(phoneNumbers);
+            friend.SocialMedia.AddRange(socials);
+
+            if (!_cache.ContainsKey(friend.Identifier))
+                _cache[friend.Identifier] = friend;
+
+            await SaveFriend(friend);
+        }
+        private async Task OnFriendDelete()
+        {
+            Guid identifier = _friendToModify.Identifier;
+
+            if (!_cache.Remove(identifier))
+                return;
+
+            Console.WriteLine($"delete friend {identifier}");
+
+            await _lock.WaitAsync();
+
+            try
             {
-                MessageBox.Show("Istnieje już ktoś taki...", "Błąd", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                return false;
+                await WebUtils.Delete($"friends/delete/{identifier}");
+            }
+            finally
+            {
+                _lock.Release();
             }
 
-            _friendsRepository.Save(friend);
-
-            MessageBox.Show("Dodano nowego znajomego!", "Sukces", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-            return true;
+            _friendToModify = new Friend();
+            ClearInput();
+            Render();
         }
 
-        public void OnFilterChanged(string text)
+        private async Task SaveFriend(Friend friend)
         {
-            _filter = Utils.TrimInput(text);
-            FilterFriends();
+            await _lock.WaitAsync();
+            try
+            {
+                await WebUtils.Post("friends/save", friend);
+            }
+            finally
+            {
+                _lock.Release();
+            }
+
+            _friendToModify = new Friend();
+            ClearInput();
+            Render();
         }
 
-        public void FilterFriends()
+        private void OnFilter()
         {
+            _filter = _friendFilterInput.Text;
+            Render();
+        }
+
+        private void OnFriendClicked(Friend friend)
+        {
+            _friendToModify = friend;
+            ClearInput();
+            FillInput(friend);
+        }
+
+        private void Render()
+        {
+            _flowLayoutPanel.Controls.Clear();
+
+            Friend[] friends;
             if (string.IsNullOrEmpty(_filter))
-                _bindingSource.DataSource = _friendsRepository.GetBindingList();
+                friends = [.. _cache.Values];
             else
             {
-                var filtered = _friendsRepository
-                    .FindAll(f =>
-                     f.Name.Contains(_filter, StringComparison.OrdinalIgnoreCase) || 
-                     f.Surname.Contains(_filter, StringComparison.OrdinalIgnoreCase) ||
-                     f.Emails.Contains(_filter, StringComparison.OrdinalIgnoreCase) ||
-                     f.PhoneNumbers.Contains(_filter, StringComparison.OrdinalIgnoreCase)
-                     );
-
-                _bindingSource.DataSource = new BindingList<Friend>(filtered);
+                friends = [.. _cache.Values.Where(f =>
+                    f.Name.Contains(_filter, StringComparison.OrdinalIgnoreCase) ||
+                    f.Surname.Contains(_filter, StringComparison.OrdinalIgnoreCase) ||
+                    (f.Emails.Any(n => n.Contains(_filter, StringComparison.OrdinalIgnoreCase))) ||
+                    (f.PhoneNumbers.Any(t => t.Contains(_filter, StringComparison.OrdinalIgnoreCase))) ||
+                    (f.SocialMedia.Any(t => t.Contains(_filter, StringComparison.OrdinalIgnoreCase)))
+                )];
             }
 
-            _selectedFriend = null;
-            _friendsDataGridView.ClearSelection();
+            foreach (Friend friend in friends)
+                CreateTile(friend);
         }
 
-        public void ValidateCells(DataGridViewCellValidatingEventArgs e)
+        private void CreateTile(Friend friend)
         {
-            var headerText = _friendsDataGridView.Columns[e.ColumnIndex].HeaderText;
-            string input = Utils.TrimInput(e.FormattedValue?.ToString() ?? "");
+            FriendTile friendTile = new FriendTile(friend);
+            friendTile.Click += (s, e) => OnFriendClicked(friend);
+            friendTile.PictureBox.Click += async (s, e) => await OnFriendPhotoClicked(s,e,friend);
 
-            if (headerText == "Name" || headerText == "Surname")
-            {
-                if (!Utils.NotEmptyAndAllLetters(input))
-                {
-                    e.Cancel = true;
-                    MessageBox.Show("Tylko litery są zezwolone oraz zawartość imienia/nazwiska nie może być pusta.", "Błąd walidacji", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                    return;
-                }
-            }
+            friendTile.Render();
 
-            if (headerText == "Emails")
-            {
-                string? validationResult = GetCommaSepparatedInputValidation(input, Utils.IsValidEmail);
-
-                if(validationResult != null)
-                {
-                    MessageBox.Show("Nieprawidłowy email: " + validationResult, "Błąd walidacji", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                    e.Cancel = true;
-                    return;
-                }
-            }
-
-            if (headerText == "PhoneNumbers")
-            {
-                string? validationResult = GetCommaSepparatedInputValidation(input, Utils.IsValidPhoneNumber);
-
-                if (validationResult != null)
-                {
-                    MessageBox.Show("Nieprawidłowy numer telefonu: " + validationResult, "Błąd walidacji", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                    e.Cancel = true;
-                    return;
-                }
-            }
+            _flowLayoutPanel.Controls.Add(friendTile);
         }
 
-        private string? GetCommaSepparatedInputValidation(string input, Predicate<string> validator)
+        private void FillInput(Friend friend)
         {
-            foreach (string val in input.Split(","))
-            {
-                if (string.IsNullOrEmpty(val))
-                    continue;
+            ClearInput();
 
-                if (validator(Utils.TrimInput(val)))
-                    continue;
+            _friendNameInput.Text = friend.Name;
+            _friendSurnameInput.Text = friend.Surname;
+            foreach (var v in friend.Emails)
+                _friendEmailList.Items.Add(v);
 
-                return val;
-            }
+            foreach (var v in friend.PhoneNumbers)
+                _friendPhoneList.Items.Add(v);
 
-            return null;
+            foreach (var v in friend.SocialMedia)
+                _friendSocialsList.Items.Add(v);
+        }
+
+        private void ClearInput()
+        {
+            _friendNameInput.Text = "";
+            _friendSurnameInput.Text = "";
+            _friendEmailInput.Text = "";
+            _friendPhoneInput.Text = "";
+            _friendSocialInput.Text = "";
+            _friendEmailList.Items.Clear();
+            _friendPhoneList.Items.Clear();
+            _friendSocialsList.Items.Clear();
         }
     }
 }

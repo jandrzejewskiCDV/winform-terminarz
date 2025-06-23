@@ -4,40 +4,59 @@ namespace Terminarz
 {
     internal class MeetingReminderService
     {
-        private readonly IMeetingsRepository _meetingsRepository;
+        private readonly MeetingsView _meetingsView;
         private readonly System.Windows.Forms.Timer _timer;
 
-        public MeetingReminderService(IMeetingsRepository meetingsRepository)
+        public MeetingReminderService(MeetingsView meetingsView)
         {
-            _meetingsRepository = meetingsRepository;
-            _timer = new System.Windows.Forms.Timer();
-            _timer.Interval = 60000;
+            _meetingsView = meetingsView;
+            _timer = new System.Windows.Forms.Timer
+            {
+                Interval = 60000
+            };
             _timer.Tick += Timer_Tick;
             _timer.Start();
         }
 
         private void Timer_Tick(object? sender, EventArgs e)
         {
-            var now = DateTime.Now;
-            var meetings = _meetingsRepository.FindAll();
-
-            foreach (var meeting in meetings)
+            _ = Remind().ContinueWith(t =>
             {
-                if (meeting.IsAllDay) 
-                    continue;
+                Console.WriteLine(t.Exception);
+            }, TaskContinuationOptions.OnlyOnFaulted);
+        }
 
-                foreach (var reminder in meeting.Reminders)
+        private async Task Remind()
+        {
+            await _meetingsView.Lock.WaitAsync();
+
+            try
+            {
+                var now = DateTime.Now;
+                var meetings = _meetingsView.Cache.Values;
+
+                foreach (var meeting in meetings)
                 {
-                    var reminderTime = CalculateReminderTime(meeting.Start, reminder);
-
-                    if (reminderTime == null)
+                    if (meeting.IsAllDay)
                         continue;
 
-                    if (!Utils.AreDateTimesEqualUpToMinutes(now, reminderTime.Value))
-                        continue;
+                    foreach (var reminder in meeting.Reminders)
+                    {
+                        var reminderTime = CalculateReminderTime(meeting.Start, reminder);
 
-                    ShowReminder(meeting, reminder);
+                        if (reminderTime == null)
+                            continue;
+
+                        if (!Utils.AreDateTimesEqualUpToMinutes(now, reminderTime.Value))
+                            continue;
+
+                        ShowReminder(meeting, reminder);
+                    }
                 }
+            }
+            finally
+            {
+                _meetingsView.Lock.Release();
             }
         }
 

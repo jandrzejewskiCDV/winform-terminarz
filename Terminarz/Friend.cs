@@ -1,29 +1,19 @@
-﻿
-using System.ComponentModel;
-
-namespace Terminarz
+﻿namespace Terminarz
 {
-    internal class Friend
+    internal class Friend : IIdentifiable<Guid>
     {
-        [Browsable(false)]
-        public long Id { get; set; }
+        public Guid Identifier { get; init; } = Guid.NewGuid();
         public string Name { get; set; }
         public string Surname { get; set; }
-        public string PhoneNumbers { get; set; }
-        public string Emails { get; set; }
+        public List<string> PhoneNumbers { get; init; } = new();
+        public List<string> Emails { get; init; } = new();
+        public List<string> SocialMedia { get; init; } = new();
+        public string? PhotoPath { get; set; }
 
         public override bool Equals(object? obj)
         {
             return obj is Friend friend &&
-                   Name == friend.Name &&
-                   Surname == friend.Surname &&
-                   PhoneNumbers == friend.PhoneNumbers &&
-                   Emails == friend.Emails;
-        }
-
-        public override int GetHashCode()
-        {
-            return HashCode.Combine(Name, Surname, PhoneNumbers, Emails);
+                   Identifier.Equals(friend.Identifier);
         }
     }
 }

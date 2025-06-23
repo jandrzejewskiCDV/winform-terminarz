@@ -1,4 +1,5 @@
-﻿using System.Text.RegularExpressions;
+﻿using System.Net;
+using System.Text.RegularExpressions;
 
 namespace Terminarz
 {
@@ -6,7 +7,9 @@ namespace Terminarz
     {
         private static readonly Regex ReminderFormat = new Regex(@"^(\d+[dhm](\s+)?)+$", RegexOptions.IgnoreCase);
 
-        private readonly IMeetingsRepository _meetingsRepository;
+        private readonly SemaphoreSlim _lock = new(1, 1);
+        private readonly Dictionary<Guid, Meeting> _cache = new();
+
         private readonly ListView _meetingsListView;
         private readonly TextBox _meetingTitleTextBox;
         private readonly TextBox _meetingDescriptionTextBox;
@@ -16,11 +19,18 @@ namespace Terminarz
         private readonly TextBox _meetingRemindersInput;
         private readonly ListBox _meetingRemindersListBox;
         private readonly TextBox _meetingFilterInput;
+        private readonly Button _meetingSaveMeetingButton;
+        private readonly Button _meetingDeleteMeetingButton;
+        private readonly Button _meetingReminderAddButton;
+        private readonly Button _meetingReminderRemoveButton;
 
         private Guid? _selectedMeeting;
         private string? _filter;
 
-        public MeetingsView(IMeetingsRepository meetingsRepository,
+        public SemaphoreSlim Lock => _lock;
+        public Dictionary<Guid, Meeting> Cache => _cache;
+
+        public MeetingsView(
             ListView meetingsListView,
             TextBox meetingTitleTextBox,
             TextBox meetingDescriptionTextBox,
@@ -29,9 +39,12 @@ namespace Terminarz
             DateTimePicker meetingEndDateTimePicker,
             TextBox meetingRemindersInput,
             ListBox meetingRemindersListBox,
-            TextBox meetingFilterInput)
+            TextBox meetingFilterInput,
+            Button meetingSaveMeetingButton,
+            Button meetingDeleteMeetingButton,
+            Button meetingReminderAddButton,
+            Button meetingReminderRemoveButton)
         {
-            _meetingsRepository = meetingsRepository;
             _meetingsListView = meetingsListView;
             _meetingTitleTextBox = meetingTitleTextBox;
             _meetingDescriptionTextBox = meetingDescriptionTextBox;
@@ -41,6 +54,10 @@ namespace Terminarz
             _meetingRemindersInput = meetingRemindersInput;
             _meetingRemindersListBox = meetingRemindersListBox;
             _meetingFilterInput = meetingFilterInput;
+            _meetingSaveMeetingButton = meetingSaveMeetingButton;
+            _meetingDeleteMeetingButton = meetingDeleteMeetingButton;
+            _meetingReminderAddButton = meetingReminderAddButton;
+            _meetingReminderRemoveButton = meetingReminderRemoveButton;
         }
 
         public void Load()
@@ -49,16 +66,25 @@ namespace Terminarz
             _meetingsListView.Columns.Add("Nazwa spotkania");
             _meetingsListView.Columns.Add("Opis spotkania");
 
-            UpdateMeetingsView();
+            _meetingsListView.SelectedIndexChanged += (s, e) => OnMeetingSelected();
+            _meetingFilterInput.TextChanged += (s, e) => OnFilterChanged();
+            _meetingIsAllDayCheckBox.CheckedChanged += (s, e) => OnMeetingIsAllDayChanged();
+            _meetingReminderAddButton.Click += (s, e) => OnMeetingReminderAdd();
+            _meetingReminderRemoveButton.Click += (s, e) => OnMeetingReminderRemove();
+            _meetingSaveMeetingButton.Click += async (s, e) => await OnMeetingSave();
+            _meetingDeleteMeetingButton.Click += async (s, e) => await OnMeetingDelete();
+
+            ClearInput();
+            LoadMeetings();
         }
 
-        public void OnMeetingSave()
+        private async Task OnMeetingSave()
         {
             string title = Utils.TrimInput(_meetingTitleTextBox.Text);
             string description = Utils.TrimInput(_meetingDescriptionTextBox.Text);
             bool isAllDay = _meetingIsAllDayCheckBox.Checked;
-            DateTime start = _meetingStartDateTimePicker.Value;
-            DateTime? end = _meetingEndDateTimePicker.Value;
+            DateTime start = _meetingStartDateTimePicker.Value.TruncateToMinute();
+            DateTime? end = _meetingEndDateTimePicker.Value.TruncateToMinute();
             List<string> reminder = _meetingRemindersListBox.Items.Cast<string>().ToList();
 
             if (string.IsNullOrEmpty(title))
@@ -93,29 +119,51 @@ namespace Terminarz
                 }
             }
 
+            if(end != null && start.Date != end.Value.Date)
+            {
+                MessageBox.Show("Spotkania muszą zostać zakończone w ten sam dzień!", "Błąd walidacji", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
+
             if (IsColliding(start, end, isAllDay))
                 return;
 
-            Meeting meeting = new Meeting();
-            if(_selectedMeeting != null)
+            await _lock.WaitAsync();
+
+            try
             {
-               var cachedMeeting = _meetingsRepository.FindOne(_selectedMeeting.Value);
-               if (cachedMeeting != null)
-                    meeting = cachedMeeting;
+                Meeting meeting = new Meeting();
+                if (_selectedMeeting != null)
+                {
+                    var cachedMeeting = _cache.GetValueOrDefault(_selectedMeeting.Value);
+                    if (cachedMeeting != null)
+                        meeting = cachedMeeting;
+                }
+
+                meeting.Title = title;
+                meeting.Description = description;
+                meeting.Start = start;
+                meeting.End = end;
+                meeting.Reminders = reminder;
+
+                await WebUtils.Post("meetings/save", meeting);
+
+                _meetingsListView.Invoke(() =>
+                {
+                    if (!_cache.ContainsKey(meeting.Identifier))
+                        _cache[meeting.Identifier] = meeting;
+
+                    MessageBox.Show("Zapisano spotkanie!", "Sukces", MessageBoxButtons.OK, MessageBoxIcon.Information);
+
+                    ClearInput();
+
+                    UpdateMeetingsView();
+                });
             }
-
-            meeting.Title = title;
-            meeting.Description = description;
-            meeting.Start = start;
-            meeting.End = end;
-            meeting.Reminders = reminder;
-
-            _meetingsRepository.Save(meeting);
-
-            MessageBox.Show("Zapisano spotkanie!", "Sukces", MessageBoxButtons.OK, MessageBoxIcon.Information);
-
-            UpdateMeetingsView();
-            ClearInput();
+            finally
+            {
+                _lock.Release();
+            }
         }
 
         public void OnMeetingSelected()
@@ -124,6 +172,27 @@ namespace Terminarz
 
             if (_selectedMeeting == null) 
                 ClearInput();
+        }
+
+        private async void LoadMeetings()
+        {
+            await _lock.WaitAsync();
+            try
+            {
+                List<Meeting>? meetings = await Utils.GetObjectsAsync<Meeting>("meetings");
+                if(meetings != null)
+                    _meetingsListView.Invoke(() =>
+                    {
+                        foreach (Meeting meeting in meetings)
+                            _cache[meeting.Identifier] = meeting;
+
+                        UpdateMeetingsView();
+                    });
+            }
+            finally
+            {
+                _lock.Release();
+            }
         }
 
         private void SelectMeeting()
@@ -139,12 +208,12 @@ namespace Terminarz
                 return;
 
             var meetingId = (Guid) item.Tag;
-            var meeting = _meetingsRepository.FindOne(meetingId);
+            var meeting = _cache.GetValueOrDefault(meetingId);
 
             if (meeting == null)
                 return;
 
-            _selectedMeeting = meeting.Id;
+            _selectedMeeting = meeting.Identifier;
             _meetingTitleTextBox.Text = meeting.Title;
             _meetingDescriptionTextBox.Text = meeting.Description;
             _meetingStartDateTimePicker.Value = meeting.Start;
@@ -159,6 +228,7 @@ namespace Terminarz
 
         private void ClearInput()
         {
+            _selectedMeeting = null;
             _meetingTitleTextBox.Text = "";
             _meetingDescriptionTextBox.Text = "";
             _meetingStartDateTimePicker.Value = DateTime.Now;
@@ -167,16 +237,29 @@ namespace Terminarz
             _meetingRemindersListBox.Items.Clear();
         }
 
-        public void OnMeetingDelete()
+        public async Task OnMeetingDelete()
         {
             if (_selectedMeeting == null)
                 return;
 
-            _meetingsRepository.Delete(_selectedMeeting.Value);
+            await _lock.WaitAsync();
+            try
+            {
+                _cache.Remove(_selectedMeeting.Value);
 
-            UpdateMeetingsView();
+                await WebUtils.Delete("meetings/delete/" + _selectedMeeting.Value);
 
-            MessageBox.Show("Usunięto spotkanie!", "Sukces", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                _meetingsListView.Invoke(() =>
+                {
+                    UpdateMeetingsView();
+
+                    MessageBox.Show("Usunięto spotkanie!", "Sukces", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                });
+            }
+            finally
+            {
+                _lock.Release();
+            }
         }
 
         public void OnMeetingReminderAdd()
@@ -219,12 +302,12 @@ namespace Terminarz
         {
             List<Meeting> meetings;
             if (string.IsNullOrEmpty(_filter))
-                meetings = _meetingsRepository.GetMeetingsByDate();
+                meetings = [.. _cache.Values];
             else
             {
-                meetings = _meetingsRepository.GetMeetingsByDate(meeting =>
+                meetings = [.. _cache.Values.Where(meeting =>
                 meeting.Title.Contains(_filter, StringComparison.OrdinalIgnoreCase) ||
-                     meeting.Description.Contains(_filter, StringComparison.OrdinalIgnoreCase));
+                     meeting.Description.Contains(_filter, StringComparison.OrdinalIgnoreCase))];
             }
 
             return meetings;
@@ -249,8 +332,10 @@ namespace Terminarz
                     _meetingsListView.Items.Add(time.ToShortDateString());
                 }
 
-                var item = new ListViewItem(["", meeting.ToString(), meeting.Description]);
-                item.Tag = meeting.Id;
+                var item = new ListViewItem(["", meeting.ToString(), meeting.Description])
+                {
+                    Tag = meeting.Identifier
+                };
 
                 _meetingsListView.Items.Add(item);
             }
@@ -261,21 +346,22 @@ namespace Terminarz
             DateTime effectiveEnd = isAllDay ? start.Date.AddDays(1).AddTicks(-1) : (end ?? start);
             DateTime effectiveStart = isAllDay ? start.Date : start;
 
-            var conflictingMeetings = _meetingsRepository.FindAll(m => {
-                if (_selectedMeeting != null && m.Id == _selectedMeeting)
+            var conflictingMeetings = _cache.Values.Where(m => {
+                if (_selectedMeeting != null && m.Identifier.Equals(_selectedMeeting.Value))
                     return false;
 
                 DateTime existingStart = m.IsAllDay ? m.Start.Date : m.Start;
                 DateTime existingEnd = m.IsAllDay ? m.Start.Date.AddDays(1).AddTicks(-1) : (m.End ?? m.Start);
 
                 return effectiveStart < existingEnd && effectiveEnd > existingStart;
-            });
+            }).ToList();
 
             if (conflictingMeetings.Count > 0)
             {
-                var conflictDetails = conflictingMeetings.Select(m =>
-                    $"'{m.Title}' ({(m.IsAllDay ? "cały dzień" : $"{m.Start:HH:mm} - {(m.End?.ToString("HH:mm") + ")" ?? "bez końca)")}")}"
-                );
+                var conflictDetails = conflictingMeetings.Select(m => {
+                    string message = (m.IsAllDay ? "cały dzień" : $"{m.Start:HH:mm} - {m.End:HH:mm}");
+                    return $"'{m.Title}' ({message})";
+                });
 
                 string message = $"Wykryto kolizję z następującymi spotkaniami:\n{string.Join("\n", conflictDetails)}";
                 MessageBox.Show(message, "Kolizja spotkań", MessageBoxButtons.OK, MessageBoxIcon.Warning);
